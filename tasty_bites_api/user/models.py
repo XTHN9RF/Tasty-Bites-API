@@ -77,3 +77,10 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.email
+
+
+class UserAvatar(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    avatar = models.ImageField(upload_to='user_avatars/')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
