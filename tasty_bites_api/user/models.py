@@ -71,7 +71,9 @@ class User(AbstractBaseUser):
     is_stuff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
-    REQUIRED_FIELDS = ['username', 'email', 'password']
+    REQUIRED_FIELDS = ['email', 'password']
+
+    USERNAME_FIELD = 'username'
 
     objects = UserModelManager()
 
