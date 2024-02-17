@@ -1,10 +1,8 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import Token
 
 from .validators import user_creation_validator
-from .validators import user_login_validator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, AuthUser
 
 User = get_user_model()

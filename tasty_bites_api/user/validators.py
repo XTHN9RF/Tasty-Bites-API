@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
@@ -28,14 +27,6 @@ def user_password_validator(password: str, confirm_password: str = "") -> bool:
         raise ValidationError('Password must be at least 8 characters long.')
     if password != confirm_password:
         raise ValidationError('Passwords do not match.')
-    return True
-
-
-def user_login_validator(email: str, password: str) -> bool:
-    """Validate the user login data before authenticating the user."""
-    password = make_password(password)
-    if not User.objects.filter(email=email) or not User.objects.filter(password=password):
-        raise ValidationError('Invalid email or password.')
     return True
 
 
