@@ -40,11 +40,11 @@ class User(AbstractUser):
     objects = UserModelManager()
 
     class Meta:
-        verbose_name = 'custom_verbose_name'
+        verbose_name = 'User'
         ordering = ['-created_at']
 
     def __str__(self):
-        return self.email
+        return self.username
 
 
 class UserAvatar(models.Model):
@@ -52,3 +52,10 @@ class UserAvatar(models.Model):
     avatar = models.ImageField(upload_to='user_avatars/')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'User Avatar'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.user.username
