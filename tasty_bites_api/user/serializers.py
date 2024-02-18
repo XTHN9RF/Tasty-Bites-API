@@ -61,3 +61,12 @@ class UserLoginSerializer(TokenObtainPairSerializer):
     class Meta:
         model = User
         fields = ['username', 'password']
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField()
+    avatar = serializers.ImageField(source='useravatar.avatar', required=False)
+
+    class Meta:
+        model = User
+        fields = ['username', 'avatar']
