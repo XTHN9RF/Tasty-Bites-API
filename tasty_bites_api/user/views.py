@@ -1,14 +1,19 @@
-from django.contrib.auth import get_user_model
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
 from rest_framework import generics
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.decorators import action
 
 from .models import User
 from .serializers import UserRegistrationSerializer
 from .serializers import UserLoginSerializer
 from .serializers import UserProfileSerializer
-from .permissions import IsCurrentUser
+from .permissions import IsObjectOwnerOrReadOnly
+from .validators import user_update_validator
+
+from common.utils import HTTP_METHODS
 
 
 class UserLoginView(TokenObtainPairView):
@@ -37,3 +42,19 @@ class UserProfileView(generics.RetrieveAPIView):
             return self.request.user
 
         return User.objects.get(username=requested_user)
+
+
+class UserUpdateView(APIView):
+    """A view that allows user to update their profile."""
+    permission_classes = (IsAuthenticated, IsObjectOwnerOrReadOnly)
+
+    @action(detail=False, methods=HTTP_METHODS.get('PUT'))
+    def update_profile(self, request):
+        user = request.user
+        serializer = UserProfileSerializer(user, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+
+        return Response(serializer.errors, status=400)

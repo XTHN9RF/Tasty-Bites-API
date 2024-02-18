@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .views import UserRegistrationView
 from .views import UserLoginView
 from .views import UserProfileView
+from .views import UserUpdateView
 
 namespace = 'user'
 
@@ -13,4 +14,5 @@ urlpatterns = [
     path('/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('/profile/<str:username>/', UserProfileView.as_view(), name='user_profile'),
     path('/profile/', UserProfileView.as_view(), name='your_profile'),
+    path('profile/update/', UserUpdateView.as_view(), name='update_profile'),
 ]
