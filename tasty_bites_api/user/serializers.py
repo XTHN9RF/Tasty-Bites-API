@@ -70,3 +70,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
         """Metaclass to define the model and fields to be serialized."""
         model = User
         fields = ['username', 'avatar']
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    """Serializer that handles converting and validation of user data during update."""
+    username = serializers.CharField(required=False)
+    password = serializers.CharField(required=False)
+    avatar = serializers.ImageField(source='useravatar.avatar', required=False)
+
+    class Meta:
+        """Metaclass to define the model and fields to be serialized."""
+        model = User
+        fields = ['username', 'email', 'avatar']
