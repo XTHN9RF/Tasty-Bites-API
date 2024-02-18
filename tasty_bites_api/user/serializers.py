@@ -9,16 +9,19 @@ User = get_user_model()
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    """Serializer that handles converting user data during registration. Also handles validation of data."""
     username = serializers.CharField(required=True)
     email = serializers.EmailField(required=True)
     password1 = serializers.CharField(required=True, write_only=True)
     password2 = serializers.CharField(required=True, write_only=True)
 
     class Meta:
+        """Metaclass to define the model and fields to be serialized."""
         model = User
         fields = ['username', 'email', 'password1', 'password2']
 
     def get_cleaned_data(self):
+        """Method to get the cleaned data from the serializer."""
         return {
             'username': self.validated_data.get('username', ''),
             'password': self.validated_data.get('password1', ''),
@@ -27,6 +30,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
+        """Override standard create method to create a user with the validated data."""
         user = User
 
         cleaned_data = self.get_cleaned_data()
@@ -50,23 +54,28 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 
 class UserLoginSerializer(TokenObtainPairSerializer):
+    """Serializer that handles converting and validation of user data during login."""
     username = serializers.CharField(write_only=True)
     password = serializers.CharField(write_only=True)
 
     def get_token(self, user: User) -> Token:
+        """Override the get_token method to include the username in the token."""
         token = super().get_token(user)
         token['username'] = user.username
         return token
 
     class Meta:
+        """Metaclass to define the model and fields to be serialized."""
         model = User
         fields = ['username', 'password']
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    """Serializer that converts user profile data into JSON."""
     username = serializers.ReadOnlyField()
     avatar = serializers.ImageField(source='useravatar.avatar', required=False)
 
     class Meta:
+        """Metaclass to define the model and fields to be serialized."""
         model = User
         fields = ['username', 'avatar']

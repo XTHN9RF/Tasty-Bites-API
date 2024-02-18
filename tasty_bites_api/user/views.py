@@ -11,17 +11,20 @@ from .serializers import UserProfileSerializer
 
 
 class UserLoginView(TokenObtainPairView):
+    """A view that allows user to login into website and get both access and refresh tokens."""
     permission_classes = (AllowAny,)
     serializer_class = UserLoginSerializer
 
 
 class UserRegistrationView(generics.CreateAPIView):
+    """A view that allows user to register into website, providing username, email and password."""
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
     permission_classes = (AllowAny,)
 
 
 class UserProfileView(generics.RetrieveAPIView):
+    """A view that allows user to view their profile or other user's profile by adding username to the URL."""
     queryset = User.objects.all()
     serializer_class = UserProfileSerializer
     permission_classes = (IsAuthenticated,)

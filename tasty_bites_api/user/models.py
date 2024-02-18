@@ -4,7 +4,10 @@ from django.contrib.auth.models import BaseUserManager
 
 
 class UserModelManager(BaseUserManager):
+    """Model manager class that handles overwriting of user creation methods"""
+
     def create_user(self, username, email, password, **extra_fields):
+        """Create and save a standard User with the given username, email, and password."""
         if not email:
             raise ValueError('The Email field must be set')
         email = self.normalize_email(email)
@@ -14,6 +17,7 @@ class UserModelManager(BaseUserManager):
         return user
 
     def create_superuser(self, username, email, password, **extra_fields):
+        """Create and save a superuser with the given username, email, and password."""
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
@@ -26,6 +30,7 @@ class UserModelManager(BaseUserManager):
 
 
 class User(AbstractUser):
+    """Custom User model that extends the AbstractUser class"""
     email = models.EmailField(max_length=255, unique=True)
     username = models.CharField(max_length=150, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -40,22 +45,27 @@ class User(AbstractUser):
     objects = UserModelManager()
 
     class Meta:
+        """Metaclass for the User model which used to define custom verbose name and ordering of the model"""
         verbose_name = 'User'
         ordering = ['-created_at']
 
     def __str__(self):
+        """String representation of the User model"""
         return self.username
 
 
 class UserAvatar(models.Model):
+    """Model class that extends the User model to store user avatars"""
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     avatar = models.ImageField(upload_to='user_avatars/')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """Metaclass for the UserAvatar model which used to define custom verbose name and ordering of the model"""
         verbose_name = 'User Avatar'
         ordering = ['-created_at']
 
     def __str__(self):
+        """String representation of the UserAvatar model"""
         return self.user.username
