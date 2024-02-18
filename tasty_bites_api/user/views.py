@@ -8,6 +8,7 @@ from .models import User
 from .serializers import UserRegistrationSerializer
 from .serializers import UserLoginSerializer
 from .serializers import UserProfileSerializer
+from .permissions import IsCurrentUser
 
 
 class UserLoginView(TokenObtainPairView):
