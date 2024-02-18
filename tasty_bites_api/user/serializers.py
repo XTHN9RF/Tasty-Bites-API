@@ -20,20 +20,11 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = ['username', 'email', 'password1', 'password2']
 
-    def get_cleaned_data(self):
-        """Method to get the cleaned data from the serializer."""
-        return {
-            'username': self.validated_data.get('username', ''),
-            'password': self.validated_data.get('password1', ''),
-            'confirmation_password': self.validated_data.get('password2', ''),
-            'email': self.validated_data.get('email', ''),
-        }
-
     def create(self, validated_data):
         """Override standard create method to create a user with the validated data."""
         user = User
 
-        cleaned_data = self.get_cleaned_data()
+        cleaned_data = self.validated_data
 
         username = cleaned_data.get('username')
         email = cleaned_data.get('email')
