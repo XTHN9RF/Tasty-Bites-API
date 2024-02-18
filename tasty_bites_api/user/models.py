@@ -31,8 +31,8 @@ class UserModelManager(BaseUserManager):
 
 class User(AbstractUser):
     """Custom User model that extends the AbstractUser class"""
-    email = models.EmailField(max_length=255, unique=True)
-    username = models.CharField(max_length=150, unique=True)
+    email = models.EmailField(max_length=60, unique=True)
+    username = models.CharField(max_length=30, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_staff = models.BooleanField(default=False)
