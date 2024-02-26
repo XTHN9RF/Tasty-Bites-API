@@ -1,3 +1,4 @@
+import logging
 import os
 
 from django.contrib.auth import get_user_model
@@ -10,6 +11,8 @@ from .validators import user_creation_validator, user_update_validator
 from .models import UserAvatar
 
 User = get_user_model()
+
+DEFAULT_AVATAR_PATH = 'user_avatars/default_avatar.png'
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -32,8 +35,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
         username: str = cleaned_data.get('username')
         email: str = cleaned_data.get('email')
-        password: str = cleaned_data.get('password')
-        confirmation_password: str = cleaned_data.get('confirmation_password')
+        password: str = cleaned_data.get('password1')
+        confirmation_password: str = cleaned_data.get('password2')
 
         user_creation_validator(username, email, password, confirmation_password)
 
@@ -81,37 +84,35 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     username = serializers.CharField(required=False)
     password = serializers.CharField(required=False)
     confirmation_password = serializers.CharField(required=False)
-    avatar = serializers.ImageField(source='useravatar.avatar', required=False)
+    avatar = serializers.ImageField(source='useravatar.avatar', required=False, allow_null=True)
 
     class Meta:
         """Metaclass to define the model and fields to be serialized."""
         model = User
         fields = ['username', 'password', 'confirmation_password', 'avatar']
 
-    def save(self, **kwargs):
-        """Override the save method to update the user with the validated data and cleaned up old avatar."""
-        user: User = self.instance
-        cleaned_data: dict = self.validated_data
-        username: str = cleaned_data.get('username')
-        password: str = cleaned_data.get('password')
-        confirmation_password: str = cleaned_data.get('confirmation_password')
+    def update(self, instance, validated_data):
+        """Override the update method to update the user with the validated data."""
+
+        cleaned_data = self.validated_data
+
+        username = cleaned_data.get('username', instance.username)
+        password = cleaned_data.get('password', instance.password)
+        confirmation_password = cleaned_data.get('confirmation_password')
 
         user_update_validator(username, password, confirmation_password)
 
-        new_avatar: UserAvatar.avatar = cleaned_data.get('avatar')
-        if new_avatar:
-            old_avatar_instance: UserAvatar.avatar = user.useravatar
-
-            if old_avatar_instance:
+        if 'avatar' in cleaned_data:
+            new_avatar = cleaned_data.get('avatar')
+            old_avatar_instance = instance.useravatar
+            old_avatar_path = os.path.join(settings.MEDIA_ROOT, str(old_avatar_instance.avatar))
+            if old_avatar_path != DEFAULT_AVATAR_PATH:
                 old_avatar_instance.delete()
-                old_avatar_path: str = os.path.join(settings.MEDIA_ROOT, str(old_avatar_instance.avatar))
-                if os.path.exists(old_avatar_path):
-                    os.remove(old_avatar_path)
+                os.remove(old_avatar_path)
+            UserAvatar.objects.create(user=instance, avatar=new_avatar)
 
-            user_avatar_instance = UserAvatar(user=user, avatar=new_avatar)
-            user_avatar_instance.save()
+        instance.username = username
+        instance.set_password(password)
+        instance.save()
 
-        user.username = username
-        user.set_password(password)
-        user.save()
-        return user
+        return instance
