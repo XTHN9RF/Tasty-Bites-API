@@ -46,7 +46,7 @@ class UserProfileView(generics.RetrieveAPIView):
 
 class UserUpdateView(ViewSet):
     """A view that allows user to update their profile."""
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsObjectOwnerOrReadOnly,)
     serializer_class = UserProfileSerializer
 
     @action(detail=False, methods=HttpMethods.PUT.value)

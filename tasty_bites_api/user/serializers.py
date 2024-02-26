@@ -1,4 +1,3 @@
-import logging
 import os
 
 from django.contrib.auth import get_user_model
@@ -10,9 +9,9 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, Auth
 from .validators import user_creation_validator, user_update_validator
 from .models import UserAvatar
 
-User = get_user_model()
+from common.constants import DEFAULT_USER_AVATAR_PATH
 
-DEFAULT_AVATAR_PATH = 'user_avatars/default_avatar.png'
+User = get_user_model()
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -44,6 +43,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             username=username,
             email=email,
         )
+
+        UserAvatar.objects.create(user=user, avatar=DEFAULT_USER_AVATAR_PATH)
 
         user.set_password(password)
         user.save()
@@ -106,7 +107,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             new_avatar = cleaned_data.get('avatar')
             old_avatar_instance = instance.useravatar
             old_avatar_path = os.path.join(settings.MEDIA_ROOT, str(old_avatar_instance.avatar))
-            if old_avatar_path != DEFAULT_AVATAR_PATH:
+            if old_avatar_path != DEFAULT_USER_AVATAR_PATH:
                 old_avatar_instance.delete()
                 os.remove(old_avatar_path)
             UserAvatar.objects.create(user=instance, avatar=new_avatar)

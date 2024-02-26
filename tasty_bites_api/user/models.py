@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import BaseUserManager
 
+from common.constants import DEFAULT_USER_AVATAR
+from common.constants import AVATARS_UPLOAD_FOLDER
+
 
 class UserModelManager(BaseUserManager):
     """Model manager class that handles overwriting of user creation methods"""
@@ -57,8 +60,8 @@ class User(AbstractUser):
 class UserAvatar(models.Model):
     """Model class that extends the User model to store user avatars"""
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    avatar = models.ImageField(upload_to='user_avatars/',
-                               default='user_avatars/default_avatar.png')
+    avatar = models.ImageField(upload_to=AVATARS_UPLOAD_FOLDER,
+                               default=DEFAULT_USER_AVATAR, )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
