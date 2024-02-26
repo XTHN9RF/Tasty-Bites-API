@@ -7,3 +7,6 @@ class HttpMethods(Enum):
     PUT = 'PUT'
     DELETE = 'DELETE'
     PATCH = 'PATCH'
+
+
+
