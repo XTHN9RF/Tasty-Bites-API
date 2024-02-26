@@ -57,7 +57,8 @@ class User(AbstractUser):
 class UserAvatar(models.Model):
     """Model class that extends the User model to store user avatars"""
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    avatar = models.ImageField(upload_to='user_avatars/')
+    avatar = models.ImageField(upload_to='user_avatars/',
+                               default='user_avatars/default_avatar.png')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
