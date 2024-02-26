@@ -1,3 +1,4 @@
+from django.contrib.auth.hashers import make_password
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
@@ -53,9 +54,14 @@ class UserUpdateView(ViewSet):
     def update_profile(self, request):
         user = request.user
         serializer = self.serializer_class(user, data=request.data, partial=True)
-
+        cleaned_data = serializer.validate(request.data)
+        avatar = cleaned_data.get('avatar', None)
         if serializer.is_valid():
-            serializer.update(user, request.data)
+            serializer.update(user, cleaned_data)
+            user.set_password(cleaned_data.get('password'))
+            user.useravatar.avatar = avatar
+            user.useravatar.save()
+            user.save()
             return Response(serializer.data, status=200)
 
         return Response(serializer.errors, status=400)
