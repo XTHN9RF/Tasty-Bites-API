@@ -1,6 +1,7 @@
 import os
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import Token
 from django.conf import settings
@@ -72,7 +73,7 @@ class UserLoginSerializer(TokenObtainPairSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     """Serializer that converts user profile data into JSON."""
     username = serializers.ReadOnlyField()
-    avatar = serializers.ImageField(source='useravatar.avatar', required=False)
+    avatar = serializers.CharField(source='useravatar.avatar.url', read_only=True)
 
     class Meta:
         """Metaclass to define the model and fields to be serialized."""
@@ -85,35 +86,39 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     username = serializers.CharField(required=False)
     password = serializers.CharField(required=False)
     confirmation_password = serializers.CharField(required=False)
-    avatar = serializers.ImageField(source='useravatar.avatar', required=False, allow_null=True)
+    avatar = serializers.CharField(source='user.useravatar.avatar.url', required=False)
 
     class Meta:
         """Metaclass to define the model and fields to be serialized."""
         model = User
         fields = ['username', 'password', 'confirmation_password', 'avatar']
 
-    def update(self, instance, validated_data):
-        """Override the update method to update the user with the validated data."""
-
-        cleaned_data = self.validated_data
-
-        username = cleaned_data.get('username', instance.username)
-        password = cleaned_data.get('password', instance.password)
-        confirmation_password = cleaned_data.get('confirmation_password')
+    def validate(self, data):
+        """Override the validate method to validate the user data."""
+        username = data.get('username')
+        password = data.get('password')
+        confirmation_password = data.get('confirmation_password')
 
         user_update_validator(username, password, confirmation_password)
 
-        if 'avatar' in cleaned_data:
-            new_avatar = cleaned_data.get('avatar')
+        return data
+
+    def update(self, instance, validated_data):
+        """Override the update method to update the user with the validated data."""
+        username = validated_data.get('username', instance.username)
+        password = validated_data.get('password', instance.password)
+        confirmation_password = validated_data.get('confirmation_password', instance.password)
+
+        if 'avatar' in validated_data:
+            new_avatar = validated_data.get('avatar')
             old_avatar_instance = instance.useravatar
-            old_avatar_path = os.path.join(settings.MEDIA_ROOT, str(old_avatar_instance.avatar))
-            if old_avatar_path != DEFAULT_USER_AVATAR_PATH:
-                old_avatar_instance.delete()
+            old_avatar_path = old_avatar_instance.avatar.url
+            if old_avatar_path not in DEFAULT_USER_AVATAR_PATH:
                 os.remove(old_avatar_path)
-            UserAvatar.objects.create(user=instance, avatar=new_avatar)
+            instance.useravatar.avatar = new_avatar
 
         instance.username = username
         instance.set_password(password)
-        instance.save()
 
+        instance.save()
         return instance
