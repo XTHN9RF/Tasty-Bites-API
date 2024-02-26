@@ -9,10 +9,10 @@ from .views import UserUpdateView
 namespace = 'user'
 
 urlpatterns = [
-    path('/register/', UserRegistrationView.as_view(), name='register'),
-    path('/login/', UserLoginView.as_view(), name='login'),
-    path('/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('/profile/<str:username>/', UserProfileView.as_view(), name='user_profile'),
-    path('/profile/', UserProfileView.as_view(), name='your_profile'),
+    path('register/', UserRegistrationView.as_view(), name='register'),
+    path('login/', UserLoginView.as_view(), name='login'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('profile/<str:username>/', UserProfileView.as_view(), name='user_profile'),
+    path('profile/', UserProfileView.as_view(), name='your_profile'),
     path('profile/update/', UserUpdateView.as_view(), name='update_profile'),
 ]
