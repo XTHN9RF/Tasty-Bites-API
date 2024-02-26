@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
@@ -11,7 +12,6 @@ from .serializers import UserRegistrationSerializer
 from .serializers import UserLoginSerializer
 from .serializers import UserProfileSerializer
 from .permissions import IsObjectOwnerOrReadOnly
-from .validators import user_update_validator
 
 from common.utils import HTTP_METHODS
 
@@ -44,17 +44,18 @@ class UserProfileView(generics.RetrieveAPIView):
         return User.objects.get(username=requested_user)
 
 
-class UserUpdateView(APIView):
+class UserUpdateView(ViewSet):
     """A view that allows user to update their profile."""
-    permission_classes = (IsAuthenticated, IsObjectOwnerOrReadOnly)
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserProfileSerializer
 
     @action(detail=False, methods=HTTP_METHODS.get('PUT'))
     def update_profile(self, request):
         user = request.user
-        serializer = UserProfileSerializer(user, data=request.data, partial=True)
+        serializer = self.serializer_class(user, data=request.data, partial=True)
 
         if serializer.is_valid():
-            serializer.save()
+            serializer.update(user, request.data)
             return Response(serializer.data, status=200)
 
         return Response(serializer.errors, status=400)
