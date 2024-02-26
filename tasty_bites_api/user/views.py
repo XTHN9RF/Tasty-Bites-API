@@ -13,7 +13,7 @@ from .serializers import UserLoginSerializer
 from .serializers import UserProfileSerializer
 from .permissions import IsObjectOwnerOrReadOnly
 
-from common.utils import HTTP_METHODS
+from common.utils import HttpMethods
 
 
 class UserLoginView(TokenObtainPairView):
@@ -49,7 +49,7 @@ class UserUpdateView(ViewSet):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserProfileSerializer
 
-    @action(detail=False, methods=HTTP_METHODS.get('PUT'))
+    @action(detail=False, methods=HttpMethods.PUT.value)
     def update_profile(self, request):
         user = request.user
         serializer = self.serializer_class(user, data=request.data, partial=True)

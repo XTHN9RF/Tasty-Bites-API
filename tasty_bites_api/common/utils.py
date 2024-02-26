@@ -1,7 +1,9 @@
-HTTP_METHODS = {
-    'GET': 'GET',
-    'POST': 'POST',
-    'PUT': 'PUT',
-    'DELETE': 'DELETE',
-    'PATCH': 'PATCH',
-}
+from enum import Enum
+
+
+class HttpMethods(Enum):
+    GET = 'GET'
+    POST = 'POST'
+    PUT = 'PUT'
+    DELETE = 'DELETE'
+    PATCH = 'PATCH'
