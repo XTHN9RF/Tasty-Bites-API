@@ -6,7 +6,7 @@ from .views import UserLoginView
 from .views import UserProfileView
 from .views import UserUpdateView
 
-namespace = 'user'
+app_name = 'user'
 
 urlpatterns = [
     path('register/', UserRegistrationView.as_view(), name='register'),
