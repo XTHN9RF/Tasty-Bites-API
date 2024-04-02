@@ -114,3 +114,14 @@ class AuthenticatedUserApiTests(TestCase):
         self.assertEqual(self.user.username, data['username'])
         self.assertTrue(self.user.check_password(data['password']))
         self.assertEqual(self.user.useravatar.avatar.url, "/media" + data['avatar'])
+
+    def test_reset_password(self):
+        old_password = self.user.password
+        url = reverse('user:reset_password')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertNotEqual(old_password, self.user.password)
+        self.assertEqual(response.data['message'], 'Password reset successfully. Check your email for new password.')

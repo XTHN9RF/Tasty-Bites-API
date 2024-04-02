@@ -1,4 +1,4 @@
-from django.contrib.auth.hashers import make_password
+from django.core.mail import send_mail
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
@@ -7,7 +7,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework import generics
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import action
-
+import os
+from dotenv import load_dotenv
 from .models import User
 from .serializers import UserRegistrationSerializer
 from .serializers import UserLoginSerializer
@@ -65,3 +66,26 @@ class UserUpdateView(ViewSet):
             return Response(serializer.data, status=200)
 
         return Response(serializer.errors, status=400)
+
+
+class UserPasswordResetView(ViewSet):
+    """A view that allows user to resend password reset email."""
+    permission_classes = (IsAuthenticated,)
+
+    @action(detail=False, methods=HttpMethods.POST.value)
+    def reset_password(self, request):
+        load_dotenv()
+        user = User.objects.get(username=self.request.user.username)
+        new_password = User.objects.make_random_password()
+        user.set_password(new_password)
+        user.save()
+
+        send_mail(
+            'Password Reset',
+            f'Your new password is: {new_password}',
+            os.getenv('EMAIL_HOST_USER'),
+            [user.email],
+            fail_silently=False
+        )
+
+        return Response({'message': 'Password reset successfully. Check your email for new password.'}, status=200)
