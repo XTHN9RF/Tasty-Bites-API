@@ -1,9 +1,9 @@
-from django.contrib.auth.hashers import make_password
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from user.models import UserAvatar
 
@@ -17,6 +17,7 @@ class PublicUserApiTests(TestCase):
             username='testuser',
             email='test@test.com',
             password='testpassword',
+            is_active=True,
         )
         self.avatar = UserAvatar.objects.create(user=self.user, avatar=DEFAULT_USER_AVATAR)
 
@@ -38,6 +39,8 @@ class PublicUserApiTests(TestCase):
         self.assertEqual(user.email, data['email'])
         self.assertEqual(user.username, data['username'])
         self.assertEqual(user.useravatar.avatar, DEFAULT_USER_AVATAR)
+        self.assertEqual('User created successfully. Check your email for account activation.',
+                         response.data['message'])
 
     def test_login_user(self):
         url = reverse('user:login')
@@ -118,10 +121,10 @@ class AuthenticatedUserApiTests(TestCase):
     def test_reset_password(self):
         old_password = self.user.password
         url = reverse('user:reset_password')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.user.refresh_from_db()
         self.assertNotEqual(old_password, self.user.password)
         self.assertEqual(response.data['message'], 'Password reset successfully. Check your email for new password.')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)

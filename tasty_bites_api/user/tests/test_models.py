@@ -45,7 +45,7 @@ class UserModelTest(TestCase):
         user = get_user_model().objects.get(username='testuser')
         self.assertEqual(user.username, 'testuser')
         self.assertEqual(user.email, 'test@test.com')
-        self.assertTrue(user.is_active)
+        self.assertFalse(user.is_active)
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
 
