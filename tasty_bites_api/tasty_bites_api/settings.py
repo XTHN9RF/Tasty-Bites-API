@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     # Local applications
     'common',
     'user',
+    'recipies',
+
 ]
 
 MIDDLEWARE = [

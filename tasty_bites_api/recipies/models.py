@@ -11,7 +11,6 @@ class Recipe(models.Model):
     complexity = models.CharField(max_length=100)
     total_price = models.CharField(max_length=100)
     total_calories = models.CharField(max_length=100)
-    image = models.ForeignKey('RecipeImage', on_delete=models.CASCADE, blank=True)
 
     slug = models.SlugField(unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

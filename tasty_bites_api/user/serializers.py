@@ -1,10 +1,8 @@
 import os
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import Token
-from django.conf import settings
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, AuthUser
 
 from .validators import user_creation_validator, user_update_validator
