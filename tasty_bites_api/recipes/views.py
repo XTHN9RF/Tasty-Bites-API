@@ -1,3 +1,4 @@
+from django.db.models import Count
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -52,6 +53,25 @@ class AddNewRecipeView(ViewSet):
                 recipe.save()
 
                 return Response("Recipe created successfully", status=201)
-            print(serializer.errors)
             return Response(serializer.errors, status=400)
         return Response("User is not exist", status=403)
+
+
+class GetRecipesByIngredientsView(ViewSet):
+    """View that returns recipes that contain given ingredients"""
+    permission_classes = [AllowAny]
+    serializer_class = RecipeSerializer
+
+    @action(methods=[HttpMethods.POST.value], detail=True)
+    def recipes_by_ingredients(self, request):
+        ingredients_slugs = self.request.data.get('ingredients')
+
+        recipes = Recipe.objects.filter(ingredients__slug__in=ingredients_slugs)
+
+        recipes = recipes.annotate(match_count=Count('ingredients'))
+
+        filtered_recipes = recipes.filter(match_count=len(ingredients_slugs))
+
+        serializer = self.serializer_class(filtered_recipes, many=True)
+
+        return Response(serializer.data, status=200)

@@ -14,9 +14,18 @@ class UnauthenticatedRecipesApiTests(TestCase):
         self.user = User.objects.create(username="unauth_test_user")
         self.ingredient1 = Ingredient.objects.create(name='Test Ingredient 1', cost=10, calories=100)
         self.ingredient2 = Ingredient.objects.create(name='Test Ingredient 2', cost=20, calories=200)
+        self.ingredient3 = Ingredient.objects.create(name='Test Ingredient 3', cost=30, calories=300)
+
         self.recipe = Recipe.objects.create(title='Test Recipe', description='Test Description', author=self.user,
                                             cook_time='30 minutes', complexity='Easy', total_price='30',
                                             total_calories='300')
+
+        self.recipe2 = Recipe.objects.create(title='Test Recipe 2', description='Test Description 2', author=self.user,
+                                             cook_time='30 minutes', complexity='Easy', total_price='30',
+                                             total_calories='300')
+
+        self.recipe.ingredients.set([self.ingredient1, self.ingredient2])
+        self.recipe2.ingredients.set([self.ingredient2, self.ingredient3])
 
     def test_recipe_detail(self):
         url = reverse('recipes:recipe-detail', kwargs={'slug': self.recipe.slug})
@@ -29,7 +38,7 @@ class UnauthenticatedRecipesApiTests(TestCase):
         self.assertEqual(response.data['complexity'], self.recipe.complexity)
         self.assertEqual(response.data['total_price'], self.recipe.total_price)
         self.assertEqual(response.data['total_calories'], self.recipe.total_calories)
-        self.assertEqual(response.data['ingredients'], [])
+        self.assertEqual(len(response.data['ingredients']), 2)
 
     def test_recipe_list(self):
         url = reverse('recipes:recipes-list')
@@ -42,8 +51,8 @@ class UnauthenticatedRecipesApiTests(TestCase):
         self.assertEqual(response.data[0]['complexity'], self.recipe.complexity)
         self.assertEqual(response.data[0]['total_price'], self.recipe.total_price)
         self.assertEqual(response.data[0]['total_calories'], self.recipe.total_calories)
-        self.assertEqual(response.data[0]['ingredients'], [])
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data[0]['ingredients']), 2)
+        self.assertEqual(len(response.data), 2)
 
     def test_recipe_creating(self):
         url = reverse('recipes:add-recipe')
@@ -93,3 +102,25 @@ class AuthenticatedRecipesApiTests(TestCase):
         self.assertEqual(Recipe.objects.get(title='Test Recipe 2').ingredients.count(), 2)
         self.assertEqual(Recipe.objects.get(title='Test Recipe 2').ingredients.first(), self.ingredient1)
         self.assertEqual(Recipe.objects.get(title='Test Recipe 2').ingredients.last(), self.ingredient2)
+
+    def test_recipes_by_ingredients(self):
+        url = reverse('recipes:recipes-by-ingredients')
+        data = {
+            'ingredients': [self.ingredient1.slug, self.ingredient2.slug]
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['description'], self.recipe.description)
+        self.assertEqual(response.data[0]['cook_time'], self.recipe.cook_time)
+        self.assertEqual(response.data[0]['total_price'], self.recipe.total_price)
+        self.assertEqual(response.data[0]['total_calories'], self.recipe.total_calories)
+        self.assertEqual(response.data[0]['complexity'], self.recipe.complexity)
+        self.assertEqual(response.data[0]['ingredients'][0]['name'], self.ingredient1.name)
+        self.assertEqual(response.data[0]['ingredients'][1]['name'], self.ingredient2.name)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['ingredients'][0]['cost'], self.ingredient1.cost)
+        self.assertEqual(response.data[0]['ingredients'][1]['cost'], self.ingredient2.cost)
+        self.assertEqual(response.data[0]['author_name'], self.recipe.author.username)
+        self.assertEqual(response.data[0]['ingredients'][0]['calories'], self.ingredient1.calories)
+        self.assertEqual(response.data[0]['ingredients'][1]['calories'], self.ingredient2.calories)
+        self.assertEqual(response.data[0]['title'], self.recipe.title)
