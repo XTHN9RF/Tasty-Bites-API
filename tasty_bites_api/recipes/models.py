@@ -7,6 +7,8 @@ class Recipe(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE)
+    image = models.ForeignKey('RecipeImage', on_delete=models.CASCADE, related_name='recipeimage', null=True)
+    ingredients = models.ManyToManyField('Ingredient', through='IngredientInRecipe')
     cook_time = models.CharField(max_length=100)
     complexity = models.CharField(max_length=100)
     total_price = models.CharField(max_length=100)
@@ -29,7 +31,7 @@ class RecipeImage(models.Model):
     image = models.ImageField(upload_to='media/recipe_images/', blank=True)
 
     def __str__(self):
-        return self.recipe.title
+        return self.recipe.title + ' image'
 
 
 class Ingredient(models.Model):

@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     # Local applications
     'common',
     'user',
-    'recipies',
+    'recipes',
 
 ]
 
