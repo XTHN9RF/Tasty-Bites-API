@@ -38,6 +38,11 @@ class Ingredient(models.Model):
     name = models.CharField(max_length=100)
     cost = models.IntegerField()
     calories = models.IntegerField()
+    slug = models.SlugField(unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super(Ingredient, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.name

@@ -64,8 +64,8 @@ class AuthenticatedRecipesApiTests(TestCase):
         self.recipe = Recipe.objects.create(title='Test Recipe', description='Test Description', author=self.user,
                                             cook_time='30 minutes', complexity='Easy', total_price='30',
                                             total_calories='300',
-                                            ingredients=[self.ingredient1.id, self.ingredient2.id])
-
+                                            )
+        self.recipe.ingredients.set([self.ingredient1, self.ingredient2])
         self.client.force_authenticate(user=self.user)
 
     def test_recipe_creating(self):
@@ -77,7 +77,7 @@ class AuthenticatedRecipesApiTests(TestCase):
             'complexity': 'Easy',
             'total_price': '30',
             'total_calories': '300',
-            'ingredients': [self.ingredient1.id, self.ingredient2.id]
+            'ingredients': [self.ingredient1.slug, self.ingredient2.slug]
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

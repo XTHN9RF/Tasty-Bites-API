@@ -62,7 +62,7 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
 
 class RecipeCreationSerializer(serializers.ModelSerializer):
     """Serializer for Recipe model"""
-    ingredients = serializers.ListField(child=serializers.IntegerField())
+    ingredients = serializers.ListField(child=serializers.CharField())
     image = RecipeImageSerializer(many=False, required=False)
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
@@ -74,9 +74,9 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create a new recipe with ingredients"""
-        ingredient_ids = validated_data.pop('ingredients')
+        ingredient_slugs = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(**validated_data)
-        for ingredient_id in ingredient_ids:
-            ingredient = Ingredient.objects.get(pk=ingredient_id)
+        for ingredient_slug in ingredient_slugs:
+            ingredient = Ingredient.objects.get(slug=ingredient_slug)
             IngredientInRecipe.objects.create(recipe=recipe, ingredient=ingredient)
         return recipe

@@ -50,7 +50,6 @@ class AddNewRecipeView(ViewSet):
             if serializer.is_valid():
                 recipe = serializer.create(serializer.validated_data)
                 recipe.save()
-                print('i should have saved it')
 
                 return Response("Recipe created successfully", status=201)
             print(serializer.errors)
