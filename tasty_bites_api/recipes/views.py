@@ -3,26 +3,59 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
-
+from common.permissions import IsObjectOwnerOrReadOnly
 from common.utils import HttpMethods
 
 from .models import Recipe, Ingredient
 from .serializers import (RecipeSerializer,
                           IngredientSerializer,
-                          RecipeCreationSerializer)
+                          RecipeCreationSerializer,
+                          RecipeUpdateSerializer)
 
 
-class GetSingleRecipeView(ViewSet):
+class SingleRecipeDetailView(ViewSet):
     """View that returns information about single recipe"""
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny, IsObjectOwnerOrReadOnly]
     serializer_class = RecipeSerializer
+
+    def get_serializer_class(self):
+        """Method that returns serializer class"""
+        if self.request.method == HttpMethods.PUT.value:
+            return RecipeUpdateSerializer
+        return self.serializer_class
 
     @action(methods=[HttpMethods.GET.value], detail=False)
     def view_single_recipe(self, request, slug):
         """Method that generates response for GET"""
         recipe = Recipe.objects.get(slug=slug)
-        serializer = self.serializer_class(recipe)
+        serializer = self.get_serializer_class()(recipe)
         return Response(serializer.data, status=200)
+
+    @action(methods=HttpMethods.PUT.value, detail=False)
+    def update_recipe(self, request, slug):
+        """Method that updates recipe with given slug"""
+        user = self.request.user
+        if user:
+            recipe = Recipe.objects.get(slug=slug)
+            serializer = self.get_serializer_class()(recipe, data=request.data, context={'request': request})
+            if serializer.is_valid():
+                recipe = serializer.update(recipe, serializer.validated_data)
+                recipe.save()
+
+                return Response("Recipe updated successfully", status=200)
+            print(serializer.errors)
+            return Response(serializer.errors, status=400)
+        return Response("User is not exist", status=403)
+
+    @action(methods=HttpMethods.DELETE.value, detail=False)
+    def delete_recipe(self, request, slug):
+        """Method that deletes recipe with given slug"""
+        user = self.request.user
+        if user:
+            recipe = Recipe.objects.get(slug=slug)
+            recipe.delete()
+            return Response("Recipe deleted successfully", status=200)
+        return Response("User is not exist", status=403)
 
 
 class GetMultipleRecipesView(ViewSet):
@@ -74,4 +107,16 @@ class GetRecipesByIngredientsView(ViewSet):
 
         serializer = self.serializer_class(filtered_recipes, many=True)
 
+        return Response(serializer.data, status=200)
+
+
+class GetIngredientsListView(ViewSet):
+    """View that returns list of ingredients"""
+    permission_classes = [AllowAny]
+    serializer_class = IngredientSerializer
+
+    @action(methods=[HttpMethods.GET.value], detail=False)
+    def get_ingredients(self, request):
+        ingredients = Ingredient.objects.all()
+        serializer = self.serializer_class(ingredients, many=True)
         return Response(serializer.data, status=200)

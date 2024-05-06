@@ -62,6 +62,43 @@ class UnauthenticatedRecipesApiTests(TestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_recipes_by_ingredients(self):
+        url = reverse('recipes:recipes-by-ingredients')
+        data = {
+            'ingredients': [self.ingredient1.slug, self.ingredient2.slug]
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['description'], self.recipe.description)
+        self.assertEqual(response.data[0]['cook_time'], self.recipe.cook_time)
+        self.assertEqual(response.data[0]['total_price'], self.recipe.total_price)
+        self.assertEqual(response.data[0]['total_calories'], self.recipe.total_calories)
+        self.assertEqual(response.data[0]['complexity'], self.recipe.complexity)
+        self.assertEqual(response.data[0]['ingredients'][0]['name'], self.ingredient1.name)
+        self.assertEqual(response.data[0]['ingredients'][1]['name'], self.ingredient2.name)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['ingredients'][0]['cost'], self.ingredient1.cost)
+        self.assertEqual(response.data[0]['ingredients'][1]['cost'], self.ingredient2.cost)
+        self.assertEqual(response.data[0]['author_name'], self.recipe.author.username)
+        self.assertEqual(response.data[0]['ingredients'][0]['calories'], self.ingredient1.calories)
+        self.assertEqual(response.data[0]['ingredients'][1]['calories'], self.ingredient2.calories)
+        self.assertEqual(response.data[0]['title'], self.recipe.title)
+
+    def test_ingredients_list(self):
+        url = reverse('recipes:ingredients-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['name'], self.ingredient1.name)
+        self.assertEqual(response.data[0]['cost'], self.ingredient1.cost)
+        self.assertEqual(response.data[0]['calories'], self.ingredient1.calories)
+        self.assertEqual(response.data[1]['name'], self.ingredient2.name)
+        self.assertEqual(response.data[1]['cost'], self.ingredient2.cost)
+        self.assertEqual(response.data[1]['calories'], self.ingredient2.calories)
+        self.assertEqual(response.data[2]['name'], self.ingredient3.name)
+        self.assertEqual(response.data[2]['cost'], self.ingredient3.cost)
+        self.assertEqual(response.data[2]['calories'], self.ingredient3.calories)
+        self.assertEqual(len(response.data), 3)
+
 
 class AuthenticatedRecipesApiTests(TestCase):
     def setUp(self):
@@ -92,35 +129,47 @@ class AuthenticatedRecipesApiTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.recipe.refresh_from_db()
         self.assertEqual(Recipe.objects.count(), 2)
-        self.assertEqual(Recipe.objects.get(title='Test Recipe 2').title, 'Test Recipe 2')
-        self.assertEqual(Recipe.objects.get(title='Test Recipe 2').description, 'Test Description 2')
-        self.assertEqual(Recipe.objects.get(title='Test Recipe 2').author, self.user)
-        self.assertEqual(Recipe.objects.get(title='Test Recipe 2').cook_time, '30 minutes')
-        self.assertEqual(Recipe.objects.get(title='Test Recipe 2').complexity, 'Easy')
-        self.assertEqual(Recipe.objects.get(title='Test Recipe 2').total_price, '30')
-        self.assertEqual(Recipe.objects.get(title='Test Recipe 2').total_calories, '300')
-        self.assertEqual(Recipe.objects.get(title='Test Recipe 2').ingredients.count(), 2)
-        self.assertEqual(Recipe.objects.get(title='Test Recipe 2').ingredients.first(), self.ingredient1)
-        self.assertEqual(Recipe.objects.get(title='Test Recipe 2').ingredients.last(), self.ingredient2)
+        self.assertEqual(Recipe.objects.get(title=data['title']).title, data['title'])
+        self.assertEqual(Recipe.objects.get(title=data['title']).description, data['description'])
+        self.assertEqual(Recipe.objects.get(title=data['title']).cook_time, data['cook_time'])
+        self.assertEqual(Recipe.objects.get(title=data['title']).complexity, data['complexity'])
+        self.assertEqual(Recipe.objects.get(title=data['title']).total_price, data['total_price'])
+        self.assertEqual(Recipe.objects.get(title=data['title']).total_calories, data['total_calories'])
+        self.assertEqual(Recipe.objects.get(title=data['title']).ingredients.count(), 2)
+        self.assertEqual(Recipe.objects.get(title=data['title']).ingredients.first(), self.ingredient1)
+        self.assertEqual(Recipe.objects.get(title=data['title']).ingredients.last(), self.ingredient2)
+        self.assertEqual(Recipe.objects.get(title=data['title']).author, self.user)
+        self.assertEqual(Recipe.objects.get(title=data['title']).author.username, self.user.username)
 
-    def test_recipes_by_ingredients(self):
-        url = reverse('recipes:recipes-by-ingredients')
-        data = {
-            'ingredients': [self.ingredient1.slug, self.ingredient2.slug]
-        }
-        response = self.client.post(url, data, format='json')
+    def test_recipe_delete(self):
+        url = reverse('recipes:delete-recipe', kwargs={'slug': self.recipe.slug})
+        response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0]['description'], self.recipe.description)
-        self.assertEqual(response.data[0]['cook_time'], self.recipe.cook_time)
-        self.assertEqual(response.data[0]['total_price'], self.recipe.total_price)
-        self.assertEqual(response.data[0]['total_calories'], self.recipe.total_calories)
-        self.assertEqual(response.data[0]['complexity'], self.recipe.complexity)
-        self.assertEqual(response.data[0]['ingredients'][0]['name'], self.ingredient1.name)
-        self.assertEqual(response.data[0]['ingredients'][1]['name'], self.ingredient2.name)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['ingredients'][0]['cost'], self.ingredient1.cost)
-        self.assertEqual(response.data[0]['ingredients'][1]['cost'], self.ingredient2.cost)
-        self.assertEqual(response.data[0]['author_name'], self.recipe.author.username)
-        self.assertEqual(response.data[0]['ingredients'][0]['calories'], self.ingredient1.calories)
-        self.assertEqual(response.data[0]['ingredients'][1]['calories'], self.ingredient2.calories)
-        self.assertEqual(response.data[0]['title'], self.recipe.title)
+        self.assertEqual(Recipe.objects.count(), 0)
+
+    def test_recipe_update(self):
+        url = reverse('recipes:update-recipe', kwargs={'slug': self.recipe.slug})
+        data = {
+            'title': 'Test Recipe change',
+            'description': 'Test Description change',
+            'cook_time': '10 minutes',
+            'complexity': 'Hard',
+            'total_price': '3000',
+            'total_calories': '300000',
+            'ingredients': [self.ingredient1.slug, self.ingredient1.slug]
+        }
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.recipe.refresh_from_db()
+        self.assertEqual(Recipe.objects.count(), 1)
+        self.assertEqual(self.recipe.title, data['title'])
+        self.assertEqual(self.recipe.description, data['description'])
+        self.assertEqual(self.recipe.cook_time, data['cook_time'])
+        self.assertEqual(self.recipe.complexity, data['complexity'])
+        self.assertEqual(self.recipe.total_price, data['total_price'])
+        self.assertEqual(self.recipe.total_calories, data['total_calories'])
+        self.assertEqual(self.recipe.ingredients.count(), 1)
+        self.assertEqual(self.recipe.ingredients.first(), self.ingredient1)
+        self.assertEqual(self.recipe.ingredients.last(), self.ingredient1)
+        self.assertEqual(self.recipe.author, self.user)
+        self.assertEqual(self.recipe.author.username, self.user.username)

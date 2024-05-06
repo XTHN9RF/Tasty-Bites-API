@@ -12,7 +12,7 @@ from .models import User
 from .serializers import UserRegistrationSerializer
 from .serializers import UserLoginSerializer
 from .serializers import UserProfileSerializer
-from .permissions import IsObjectOwnerOrReadOnly
+from common.permissions import IsObjectOwnerOrReadOnly
 
 from common.utils import HttpMethods
 
@@ -112,7 +112,7 @@ class UserUpdateView(ViewSet):
 
 class UserPasswordResetView(ViewSet):
     """A view that allows user to resend password reset email."""
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsObjectOwnerOrReadOnly)
 
     @action(detail=False, methods=HttpMethods.POST.value)
     def reset_password(self, request):

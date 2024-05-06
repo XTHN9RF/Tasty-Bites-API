@@ -40,15 +40,32 @@ class RecipeSerializer(serializers.ModelSerializer):
             'image', 'title', 'author_name', 'description', 'ingredients', 'cook_time', 'complexity', 'total_price',
             'total_calories', 'created_at')
 
+
+class RecipeUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for Recipe model"""
+    ingredients = serializers.ListField(child=serializers.CharField())
+    image = RecipeImageSerializer(many=False, required=False)
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'image', 'title', 'description', 'ingredients', 'cook_time', 'complexity', 'total_price',
+            'total_calories')
+
     def update(self, instance, validated_data):
         """Update a recipe with ingredients"""
-        ingredients_data = validated_data.pop('ingredients')
-        instance.name = validated_data.get('name', instance.name)
+        ingredient_slugs = validated_data.pop('ingredients')
+        instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
+        instance.cook_time = validated_data.get('cook_time', instance.cook_time)
+        instance.complexity = validated_data.get('complexity', instance.complexity)
+        instance.total_price = validated_data.get('total_price', instance.total_price)
+        instance.total_calories = validated_data.get('total_calories', instance.total_calories)
         instance.save()
-        for ingredient_data in ingredients_data:
-            ingredient = Ingredient.objects.create(recipe=instance, **ingredient_data)
-            IngredientInRecipe.objects.create(recipe=instance, ingredient=ingredient)
+        IngredientInRecipe.objects.filter(recipe=instance).delete()
+        for ingredient_slug in ingredient_slugs:
+            ingredient = Ingredient.objects.get(slug=ingredient_slug)
+            IngredientInRecipe.objects.update_or_create(recipe=instance, ingredient=ingredient)
         return instance
 
 
